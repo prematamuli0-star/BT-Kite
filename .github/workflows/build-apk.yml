@@ -20,37 +20,23 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Setup Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
       - name: Extract BT Kite Source
         run: |
           unzip -o bt-kite.zip -d source
 
-      - name: Find Android Project
+      - name: Build BT Kite Release APK
         run: |
-          GRADLEW=$(find . -type f -name gradlew | head -n 1)
+          cd source/android-app
+          gradle assembleRelease
 
-          if [ -z "$GRADLEW" ]; then
-            echo "ERROR: gradlew not found!"
-            echo "Please check if Android source is included in bt-kite.zip"
-            exit 1
-          fi
-
-          PROJECT_DIR=$(dirname "$GRADLEW")
-
-          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
-
-          chmod +x "$GRADLEW"
-
-          echo "Android project found at: $PROJECT_DIR"
-
-      - name: Build Release APK
-        run: |
-          cd "$PROJECT_DIR"
-          ./gradlew assembleRelease
-
-      - name: Upload APK
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: BT-Kite-APK
-          path: |
-            **/build/outputs/apk/**/*.apk
+          name: BT-Kite-Release-APK
+          path: source/android-app/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
